@@ -1,0 +1,47 @@
+import sys
+import time
+import datetime
+import bs4
+import requests
+import gc
+import newspaper
+import time
+import progressbar
+from bs4 import BeautifulSoup
+from urllib.request import urlopen
+from googlesearch import search
+
+Website_URL = input("Enter Search Name:  \n") 
+ 
+# to search
+query = Website_URL
+Sites = []
+Text  = []
+
+for j in search(query, tld="co.in", num=20, stop=20, pause=2):
+
+    Sites.append(j)
+
+    print(j)
+
+    url_i = newspaper.Article(url="%s" % (j), language='en')
+    url_i.download()
+    url_i.parse()
+    print(url_i.text)
+
+    Text.append(url_i.text)
+
+    bar = progressbar.ProgressBar(max_value=progressbar.UnknownLength)
+    for i in range(20):
+        time.sleep(0.1)
+        bar.update(i)
+        now = datetime.datetime.now()
+        date_time=now.strftime("%d/%m/%Y %H:%M:%S")
+        print(date_time)
+    
+#print(Sites,'\n')
+#print(Text)
+
+print ('Completed')
+
+sys.exit
