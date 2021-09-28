@@ -41,7 +41,7 @@ for j in search(query, tld="co.in", num=20, stop=20, pause=2):
 
 #File Creation Added 9/28/2021
 FPath = "F:\\"  #please label the File Path you like to use
-Format = ".txt" #please denote the File Formet you would like to use | most likely .txt if writing to notepad
+Format = ".txt" #please denote the File Formet you would like to use | most likely .txt if writing to notepad 
 FName = FPath + Website_URL + Format
 
 f = open(FName, "w")
