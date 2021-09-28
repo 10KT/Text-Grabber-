@@ -11,7 +11,7 @@ from bs4 import BeautifulSoup
 from urllib.request import urlopen
 from googlesearch import search
 
-Website_URL = input("Enter Search Name:  \n") 
+Website_URL = input("Enter Search Name:  \n") #This will be used to title the exported document
  
 # to search
 query = Website_URL
@@ -38,7 +38,16 @@ for j in search(query, tld="co.in", num=20, stop=20, pause=2):
         now = datetime.datetime.now()
         date_time=now.strftime("%d/%m/%Y %H:%M:%S")
         print(date_time)
-    
+
+#File Creation Added 9/28/2021
+FPath = "F:\\"  #please label the File Path you like to use
+Format = ".txt" #please denote the File Formet you would like to use | most likely .txt if writing to notepad
+FName = FPath + Website_URL + Format
+
+f = open(FName, "w")
+f.write(str(Text))
+f.close
+
 #print(Sites,'\n')
 #print(Text)
 
