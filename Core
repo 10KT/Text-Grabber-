@@ -12,16 +12,24 @@ from urllib.request import urlopen
 from googlesearch import search
 
 Website_URL = input("Enter Search Name:  \n") #This will be used to title the exported document
- 
+
+#####################
+## GOLBAL VARIBLES ##
+##################### 
 # to search
 query = Website_URL
 Sites = []
 Text  = []
+data     = []        # Added 10/05/21
+df2      = []        # Added 10/05/21
+Auth     = []        # Added 10/05/21
+Pub_Date = []        # Added 10/05/21
+#####################
 
 for j in search(query, tld="co.in", num=20, stop=20, pause=2):
 
     Sites.append(j)
-
+    Url = (j)       # Added 10/05/21
     print(j)
 
     url_i = newspaper.Article(url="%s" % (j), language='en')
@@ -29,7 +37,18 @@ for j in search(query, tld="co.in", num=20, stop=20, pause=2):
     url_i.parse()
     print(url_i.text)
 
+    article  = Article(j)            # Added 10/05/21
+    article.download()               # Added 10/05/21
+    article.parse()                  # Added 10/05/21
+    Auth     = article.authors       # Added 10/05/21
+    Pub_Date = article.publish_date  # Added 10/05/21
+    
     Text.append(url_i.text)
+
+    data.append({ 'URLs': [Url], 'Author' : [Auth], 'Publish Date' : [Pub_Date], 'Content' : [url_i.text]})  # Added 10/05/21
+ 
+    df = pd.DataFrame(data, columns= ['URLs', 'Author', 'Publish Date', 'Content'])                          # Added 10/05/21
+    #print (df)                                                                                              # Added 10/05/21
 
     bar = progressbar.ProgressBar(max_value=progressbar.UnknownLength)
     for i in range(20):
@@ -39,14 +58,21 @@ for j in search(query, tld="co.in", num=20, stop=20, pause=2):
         date_time=now.strftime("%d/%m/%Y %H:%M:%S")
         print(date_time)
 
+
+
 #File Creation Added 9/28/2021
 FPath = "F:\\"  #please label the File Path you like to use
-Format = ".txt" #please denote the File Formet you would like to use | most likely .txt if writing to notepad 
-FName = FPath + Website_URL + Format
+Format_txt = ".txt" 
+Format_csv = ".csv" 
+FName      = FPath + Website_URL + Format_txt
+FName2     = FPath + Website_URL + Format_csv  # Added 10/05/21
 
 f = open(FName, "w")
 f.write(str(Text))
 f.close
+
+df.to_csv (FName2, index = False, header=True) # Added 10/05/21
+print (df)                                     # Added 10/05/21
 
 #print(Sites,'\n')
 #print(Text)
