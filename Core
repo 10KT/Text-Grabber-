@@ -1,15 +1,11 @@
-import sys
-import time
-import datetime
-import bs4
-import requests
-import gc
-import newspaper
-import time
-import progressbar
+import sys, progressbar, time, newspaper, gc, requests, bs4, datetime, os, urllib3, numpy as np, pandas as pd
 from bs4 import BeautifulSoup
-from urllib.request import urlopen
+from urllib.request import urlopen, Request
+from urllib.error import URLError, HTTPError
 from googlesearch import search
+from newspaper import Article
+from newspaper import Config
+from http.client import responses
 
 Website_URL = input("Enter Search Name:  \n") #This will be used to title the exported document
 
@@ -17,59 +13,76 @@ Website_URL = input("Enter Search Name:  \n") #This will be used to title the ex
 ## GOLBAL VARIBLES ##
 ##################### 
 # to search
-query = Website_URL
-Sites = []
-Text  = []
+query = Website_URL   
+Sites    = []   
+Text     = []
 data     = []        # Added 10/05/21
 df2      = []        # Added 10/05/21
 Auth     = []        # Added 10/05/21
 Pub_Date = []        # Added 10/05/21
 #####################
 
-for j in search(query, tld="co.in", num=20, stop=20, pause=2):
+for j in search(query, tld="co.in", num=50, stop=50, pause=2):
 
     Sites.append(j)
     Url = (j)       # Added 10/05/21
     print(j)
 
+    ###############################
+    http = urllib3.PoolManager()      #Added 10/11/21
+    request = http.request('GET', j)  #Added 10/11/21
+
+    http_status = request.status      #Added 10/11/21
+    
+    if http_status == 403:            #Added 10/11/21
+        print('error')                #Added 10/11/21
+        continue
+    else:                             #Added 10/11/21 
+        print('good')                 #Added 10/11/21
+        pass
+
+    print(http_status)                #Added 10/11/21
+    ###############################
+
     url_i = newspaper.Article(url="%s" % (j), language='en')
     url_i.download()
     url_i.parse()
-    print(url_i.text)
+    #print(url_i.text)
 
     article  = Article(j)            # Added 10/05/21
     article.download()               # Added 10/05/21
     article.parse()                  # Added 10/05/21
     Auth     = article.authors       # Added 10/05/21
     Pub_Date = article.publish_date  # Added 10/05/21
-    
+  
+
     Text.append(url_i.text)
 
     data.append({ 'URLs': [Url], 'Author' : [Auth], 'Publish Date' : [Pub_Date], 'Content' : [url_i.text]})  # Added 10/05/21
  
     df = pd.DataFrame(data, columns= ['URLs', 'Author', 'Publish Date', 'Content'])                          # Added 10/05/21
-    #print (df)                                                                                              # Added 10/05/21
+    #print (df)
+
 
     bar = progressbar.ProgressBar(max_value=progressbar.UnknownLength)
+    
     for i in range(20):
         time.sleep(0.1)
         bar.update(i)
         now = datetime.datetime.now()
         date_time=now.strftime("%d/%m/%Y %H:%M:%S")
         print(date_time)
-
-
-
+ 
 #File Creation Added 9/28/2021
-FPath = "F:\\"  #please label the File Path you like to use
+FPath      = "F:\\"  #please label the File Path you like to use
 Format_txt = ".txt" 
 Format_csv = ".csv" 
 FName      = FPath + Website_URL + Format_txt
 FName2     = FPath + Website_URL + Format_csv  # Added 10/05/21
 
-f = open(FName, "w")
-f.write(str(Text))
-f.close
+#f = open(FName, "w")
+#f.write(str(Text))
+#f.close
 
 df.to_csv (FName2, index = False, header=True) # Added 10/05/21
 print (df)                                     # Added 10/05/21
@@ -80,3 +93,79 @@ print (df)                                     # Added 10/05/21
 print ('Completed')
 
 sys.exit
+
+#print("Major Image in the article:")
+#print(article.top_image)
+#article.nlp()
+#print ("Keywords in the article")
+#print(article.keywords)
+#print("Article Summary")
+#print(article.summary)
+
+#<<<Added 10/11/21>>>#
+responses = {
+    100: ('Continue', 'Request received, please continue'),
+    101: ('Switching Protocols',
+          'Switching to new protocol; obey Upgrade header'),
+
+    200: ('OK', 'Request fulfilled, document follows'),
+    201: ('Created', 'Document created, URL follows'),
+    202: ('Accepted',
+          'Request accepted, processing continues off-line'),
+    203: ('Non-Authoritative Information', 'Request fulfilled from cache'),
+    204: ('No Content', 'Request fulfilled, nothing follows'),
+    205: ('Reset Content', 'Clear input form for further input.'),
+    206: ('Partial Content', 'Partial content follows.'),
+
+    300: ('Multiple Choices',
+          'Object has several resources -- see URI list'),
+    301: ('Moved Permanently', 'Object moved permanently -- see URI list'),
+    302: ('Found', 'Object moved temporarily -- see URI list'),
+    303: ('See Other', 'Object moved -- see Method and URL list'),
+    304: ('Not Modified',
+          'Document has not changed since given time'),
+    305: ('Use Proxy',
+          'You must use proxy specified in Location to access this '
+          'resource.'),
+    307: ('Temporary Redirect',
+          'Object moved temporarily -- see URI list'),
+
+    400: ('Bad Request',
+          'Bad request syntax or unsupported method'),
+    401: ('Unauthorized',
+          'No permission -- see authorization schemes'),
+    402: ('Payment Required',
+          'No payment -- see charging schemes'),
+    403: ('Forbidden',
+          'Request forbidden -- authorization will not help'),
+    404: ('Not Found', 'Nothing matches the given URI'),
+    405: ('Method Not Allowed',
+          'Specified method is invalid for this server.'),
+    406: ('Not Acceptable', 'URI not available in preferred format.'),
+    407: ('Proxy Authentication Required', 'You must authenticate with '
+          'this proxy before proceeding.'),
+    408: ('Request Timeout', 'Request timed out; try again later.'),
+    409: ('Conflict', 'Request conflict.'),
+    410: ('Gone',
+          'URI no longer exists and has been permanently removed.'),
+    411: ('Length Required', 'Client must specify Content-Length.'),
+    412: ('Precondition Failed', 'Precondition in headers is false.'),
+    413: ('Request Entity Too Large', 'Entity is too large.'),
+    414: ('Request-URI Too Long', 'URI is too long.'),
+    415: ('Unsupported Media Type', 'Entity body in unsupported format.'),
+    416: ('Requested Range Not Satisfiable',
+          'Cannot satisfy request range.'),
+    417: ('Expectation Failed',
+          'Expect condition could not be satisfied.'),
+
+    500: ('Internal Server Error', 'Server got itself in trouble'),
+    501: ('Not Implemented',
+          'Server does not support this operation'),
+    502: ('Bad Gateway', 'Invalid responses from another server/proxy.'),
+    503: ('Service Unavailable',
+          'The server cannot process the request due to a high load'),
+    504: ('Gateway Timeout',
+          'The gateway server did not receive a timely response'),
+    505: ('HTTP Version Not Supported', 'Cannot fulfill request.'),
+    999: ('Non-Standard')
+    }
