@@ -1,4 +1,4 @@
-import sys, progressbar, time, newspaper, gc, requests, bs4, datetime, os, urllib3, numpy as np, pandas as pd
+import sys, progressbar, time, newspaper, gc, requests, bs4, datetime, os, urllib3, numpy as np, pandas as pd, nltk, numpy
 from bs4 import BeautifulSoup
 from urllib.request import urlopen, Request
 from urllib.error import URLError, HTTPError
@@ -6,6 +6,12 @@ from googlesearch import search
 from newspaper import Article
 from newspaper import Config
 from http.client import responses
+from pprint import pprint
+from nltk.corpus import stopwords
+from nltk.sentiment import SentimentIntensityAnalyzer
+
+nltk.download("averaged_perceptron_tagger" , "word_tokenize" , "Punkt", "english", "93mpunkt" , "Vader_lexicon")  # Added 12/13/21
+#nltk.download()  # Added 12/13/21
 
 Website_URL = input("Enter Search Name:  \n") #This will be used to title the exported document
 
@@ -20,9 +26,15 @@ data     = []        # Added 10/05/21
 df2      = []        # Added 10/05/21
 Auth     = []        # Added 10/05/21
 Pub_Date = []        # Added 10/05/21
+tokens   = []        # Added 12/13/21
 #####################
 
-for j in search(query, tld="co.in", num=50, stop=50, pause=2):
+for j in search(query, tld="co.in", num=10, stop=10, pause=2):
+
+    user_agent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'
+
+    config = Config()
+    config.browser_user_agent = user_agent
 
     Sites.append(j)
     Url = (j)       # Added 10/05/21
@@ -44,7 +56,7 @@ for j in search(query, tld="co.in", num=50, stop=50, pause=2):
     print(http_status)                #Added 10/11/21
     ###############################
 
-    url_i = newspaper.Article(url="%s" % (j), language='en')
+    url_i = newspaper.Article(url="%s" % (j), language='en') 
     url_i.download()
     url_i.parse()
     #print(url_i.text)
@@ -55,15 +67,19 @@ for j in search(query, tld="co.in", num=50, stop=50, pause=2):
     Auth     = article.authors       # Added 10/05/21
     Pub_Date = article.publish_date  # Added 10/05/21
   
-
     Text.append(url_i.text)
 
-    data.append({ 'URLs': [Url], 'Author' : [Auth], 'Publish Date' : [Pub_Date], 'Content' : [url_i.text]})  # Added 10/05/21
+    Wording = url_i.text                 # Added 12/13/21
+    tokens = nltk.word_tokenize(Wording) # Added 12/13/21
+    #print(tokens)
+    sia = SentimentIntensityAnalyzer()   # Added 12/13/21
+    #print(sia.polarity_scores(Wording)) # Added 12/13/21
+
+    data.append({ 'URLs': [Url], 'Author' : [Auth], 'Publish Date' : [Pub_Date], 'Content' : [url_i.text], "Sentiment" : [sia.polarity_scores(Wording)] })  # Added 10/05/21
  
-    df = pd.DataFrame(data, columns= ['URLs', 'Author', 'Publish Date', 'Content'])                          # Added 10/05/21
+    df = pd.DataFrame(data, columns= ['URLs', 'Author', 'Publish Date', "Sentiment" , 'Content'])                          # Added 10/05/21
     #print (df)
-
-
+      
     bar = progressbar.ProgressBar(max_value=progressbar.UnknownLength)
     
     for i in range(20):
@@ -73,19 +89,23 @@ for j in search(query, tld="co.in", num=50, stop=50, pause=2):
         date_time=now.strftime("%d/%m/%Y %H:%M:%S")
         print(date_time)
  
+
 #File Creation Added 9/28/2021
 FPath      = "F:\\"  #please label the File Path you like to use
 Format_txt = ".txt" 
 Format_csv = ".csv" 
-FName      = FPath + Website_URL + Format_txt
+FName      = FPath + Website_URL + Format_txt  # Text file
 FName2     = FPath + Website_URL + Format_csv  # Added 10/05/21
+
+#sia = SentimentIntensityAnalyzer()   # Added 12/13/21
+#print(sia.polarity_scores(Text))     # Added 12/13/21
 
 #f = open(FName, "w")
 #f.write(str(Text))
 #f.close
 
-df.to_csv (FName2, index = False, header=True) # Added 10/05/21
-print (df)                                     # Added 10/05/21
+df.to_csv (FName2, index = False, header=True)  # Added 10/05/21
+print (df)                                      # Added 10/05/21
 
 #print(Sites,'\n')
 #print(Text)
@@ -169,3 +189,7 @@ responses = {
     505: ('HTTP Version Not Supported', 'Cannot fulfill request.'),
     999: ('Non-Standard')
     }
+
+# Cite : 
+# Bird, Steven, Edward Loper and Ewan Klein (2009), Natural Language Processing with Python. O’Reilly Media Inc.
+# https://www.nltk.org/
